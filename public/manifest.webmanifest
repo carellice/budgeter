@@ -1,0 +1,19 @@
+{
+  "name": "Budgeter",
+  "short_name": "Budgeter",
+  "description": "Pianifica e monitora il budget personale con dati solo locali.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07131f",
+  "theme_color": "#07131f",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
