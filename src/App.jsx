@@ -184,26 +184,55 @@ const ONBOARDING_SLIDES = [
 
 const FEATURE_DISCOVERY_STEPS = [
   {
+    view: "budget",
     selector: "[data-discovery='brand']",
     title: "Budgeter e dati locali",
     text: "Qui riconosci l'app: i dati vengono salvati nel browser e non vengono inviati a server esterni."
   },
   {
+    view: "budget",
     selector: "[data-discovery='period']",
     title: "Periodo del budget",
     text: "Da qui cambi mese e anno. Ogni periodo ha le sue categorie, i suoi attesi e i movimenti registrati."
   },
   {
+    view: "budget",
     selector: "[data-discovery='budget-prep']",
     title: "Guida agli importi attesi",
     text: "Questa guida ti accompagna categoria per categoria per preparare il budget del mese senza dimenticare voci ricorrenti."
   },
   {
+    view: "budget",
     selector: "[data-discovery='budget-groups']",
     title: "Gruppi di categorie",
     text: "Apri un gruppo, cerca la categoria, imposta l'atteso e registra entrate o spese quando avvengono."
   },
   {
+    view: "dashboard",
+    selector: "[data-discovery='dashboard-year']",
+    title: "Dashboard annuale",
+    text: "Qui cambi anno e guardi l'andamento complessivo senza uscire dalla dashboard."
+  },
+  {
+    view: "dashboard",
+    selector: "[data-discovery='dashboard-charts']",
+    title: "Grafici atteso vs reale",
+    text: "I grafici confrontano gli importi pianificati con quelli registrati per entrate, necessari e sfizi."
+  },
+  {
+    view: "categories",
+    selector: "[data-discovery='category-panels']",
+    title: "Categorie personalizzate",
+    text: "Da qui gestisci le categorie dei tre gruppi e decidi quali voci usare nel budget mensile."
+  },
+  {
+    view: "categories",
+    selector: "[data-discovery='category-form']",
+    title: "Nuove categorie e default",
+    text: "Aggiungi una categoria e, se vuoi, imposta un atteso default da richiamare nella guida del budget."
+  },
+  {
+    view: "categories",
     selector: "[data-discovery='desktop-menu'], [data-discovery='bottom-nav']",
     title: "Navigazione",
     text: "Da qui passi tra Budget, Dashboard, Categorie e Impostazioni. La stessa struttura funziona su desktop e mobile."
@@ -1057,7 +1086,12 @@ function App() {
         onFinish={() => closeOnboarding({ startDiscovery: true })}
         onSkip={() => closeOnboarding({ skipDiscovery: true })}
       />
-      <FeatureDiscovery open={featureDiscoveryOpen} onClose={closeFeatureDiscovery} />
+      <FeatureDiscovery
+        open={featureDiscoveryOpen}
+        activeView={activeView}
+        setActiveView={setActiveView}
+        onClose={closeFeatureDiscovery}
+      />
     </>
   );
 }
@@ -1148,7 +1182,7 @@ function OnboardingModal({ open, onFinish, onSkip }) {
   );
 }
 
-function FeatureDiscovery({ open, onClose }) {
+function FeatureDiscovery({ open, activeView, setActiveView, onClose }) {
   const [step, setStep] = useState(0);
   const [position, setPosition] = useState(null);
   const current = FEATURE_DISCOVERY_STEPS[step];
@@ -1157,6 +1191,12 @@ function FeatureDiscovery({ open, onClose }) {
   useEffect(() => {
     if (open) setStep(0);
   }, [open]);
+
+  useEffect(() => {
+    if (!open || !current?.view || activeView === current.view) return;
+    setPosition(null);
+    setActiveView(current.view);
+  }, [activeView, current?.view, open, setActiveView]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -1169,6 +1209,8 @@ function FeatureDiscovery({ open, onClose }) {
 
   useEffect(() => {
     if (!open || !current) return undefined;
+    if (current.view && activeView !== current.view) return undefined;
+
     let frame = 0;
 
     function visibleElement(selector) {
@@ -1221,7 +1263,7 @@ function FeatureDiscovery({ open, onClose }) {
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
     };
-  }, [current, open]);
+  }, [activeView, current, open]);
 
   if (!open || !current) return null;
 
@@ -1987,13 +2029,13 @@ function DashboardView({ selectedYear, setSelectedYear, yearOptions, dashboardDa
 
   return (
     <>
-      <section className="dashboard-card">
+      <section className="dashboard-card" data-discovery="dashboard-card">
         <div className="section-head">
           <div>
             <span className="eyebrow">Reporting annuale</span>
             <h1>Andamento {selectedYear}</h1>
           </div>
-          <div className="dashboard-year-switcher" aria-label="Anno dashboard">
+          <div className="dashboard-year-switcher" aria-label="Anno dashboard" data-discovery="dashboard-year">
             <button className="icon-button" onClick={() => setSelectedYear(previousYear)} aria-label="Anno precedente">
               <ChevronLeft size={18} />
             </button>
@@ -2007,7 +2049,7 @@ function DashboardView({ selectedYear, setSelectedYear, yearOptions, dashboardDa
           </div>
         </div>
 
-        <div className="charts-grid">
+        <div className="charts-grid" data-discovery="dashboard-charts">
           {TYPES.map((type) => (
             <ChartPanel
               key={type}
@@ -2104,7 +2146,7 @@ function CategoriesView({
   }
 
   return (
-    <section className="categories-card">
+    <section className="categories-card" data-discovery="categories-card">
       <div className="section-head">
         <div>
           <span className="eyebrow">Categorie entrate e uscite</span>
@@ -2112,7 +2154,7 @@ function CategoriesView({
         </div>
       </div>
 
-      <div className="categories-grid">
+      <div className="categories-grid" data-discovery="category-panels">
         {CATEGORY_GROUPS.map((group) => {
           const groupOptions = categoryGroupOptions(group, categoryOptions);
           const targetType = group.types[0];
@@ -2155,7 +2197,11 @@ function CategoriesView({
               ))}
             </div>
 
-            <form className="category-form" onSubmit={(event) => submitCategory(group.key, event)}>
+            <form
+              className="category-form"
+              data-discovery="category-form"
+              onSubmit={(event) => submitCategory(group.key, event)}
+            >
               <input
                 value={drafts[group.key] ?? ""}
                 onChange={(event) =>
