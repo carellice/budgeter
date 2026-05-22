@@ -42,6 +42,8 @@ const THEME_KEY = "budgeter:theme";
 const CATEGORY_STORAGE_KEY = "budgeter:categories:v1";
 const CATEGORY_DEFAULTS_STORAGE_KEY = "budgeter:category-defaults:v1";
 const CATEGORIES_DEFAULTS_PRUNED_KEY = "budgeter:categories-defaults-pruned:v1";
+const ONBOARDING_SEEN_KEY = "budgeter:onboarding-seen:v1";
+const FEATURE_DISCOVERY_SEEN_KEY = "budgeter:feature-discovery-seen:v1";
 
 const MONTHS = [
   "Gennaio",
@@ -154,6 +156,58 @@ const VIEW_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: BarChart3 },
   { id: "categories", label: "Categorie", icon: Tags },
   { id: "settings", label: "Impostazioni", icon: Settings }
+];
+
+const ONBOARDING_SLIDES = [
+  {
+    eyebrow: "Benvenuto",
+    title: "Budgeter ti aiuta a dare un posto a ogni euro.",
+    text: "L'app serve a pianificare il mese, registrare quello che succede davvero e capire subito se entrate, spese necessarie e sfizi restano in equilibrio.",
+    icon: Wallet,
+    accent: "var(--primary)"
+  },
+  {
+    eyebrow: "Metodo",
+    title: "Prima imposti l'atteso, poi registri il reale.",
+    text: "Per ogni categoria puoi salvare un importo previsto. Durante il mese aggiungi i movimenti: Budgeter confronta piano e realta senza fogli sparsi.",
+    icon: Target,
+    accent: "var(--secondary)"
+  },
+  {
+    eyebrow: "Lettura",
+    title: "Tre gruppi, una dashboard e dati solo tuoi.",
+    text: "Entrate e risparmi, necessari e sfizi alimentano i grafici annuali. Tutto resta nel browser, con backup JSON se vuoi spostare o salvare i dati.",
+    icon: BarChart3,
+    accent: "var(--tertiary)"
+  }
+];
+
+const FEATURE_DISCOVERY_STEPS = [
+  {
+    selector: "[data-discovery='brand']",
+    title: "Budgeter e dati locali",
+    text: "Qui riconosci l'app: i dati vengono salvati nel browser e non vengono inviati a server esterni."
+  },
+  {
+    selector: "[data-discovery='period']",
+    title: "Periodo del budget",
+    text: "Da qui cambi mese e anno. Ogni periodo ha le sue categorie, i suoi attesi e i movimenti registrati."
+  },
+  {
+    selector: "[data-discovery='budget-prep']",
+    title: "Guida agli importi attesi",
+    text: "Questa guida ti accompagna categoria per categoria per preparare il budget del mese senza dimenticare voci ricorrenti."
+  },
+  {
+    selector: "[data-discovery='budget-groups']",
+    title: "Gruppi di categorie",
+    text: "Apri un gruppo, cerca la categoria, imposta l'atteso e registra entrate o spese quando avvengono."
+  },
+  {
+    selector: "[data-discovery='desktop-menu'], [data-discovery='bottom-nav']",
+    title: "Navigazione",
+    text: "Da qui passi tra Budget, Dashboard, Categorie e Impostazioni. La stessa struttura funziona su desktop e mobile."
+  }
 ];
 
 const formatter = new Intl.NumberFormat("it-IT", {
@@ -408,6 +462,8 @@ function App() {
     () => localStorage.getItem(CATEGORIES_DEFAULTS_PRUNED_KEY) === "true"
   );
   const [isReady, setIsReady] = useState(false);
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [featureDiscoveryOpen, setFeatureDiscoveryOpen] = useState(false);
   const fileInputRef = useRef(null);
   const showPeriodControls = activeView === "budget";
   const isCurrentPeriod = selectedMonth === today.month && selectedYear === today.year;
@@ -466,6 +522,23 @@ function App() {
   useEffect(() => {
     if (isReady) localStorage.setItem(STORAGE_KEY, JSON.stringify(database));
   }, [database, isReady]);
+
+  useEffect(() => {
+    if (!isReady) return;
+
+    const hasSeenOnboarding = localStorage.getItem(ONBOARDING_SEEN_KEY) === "true";
+    const hasSeenFeatureDiscovery = localStorage.getItem(FEATURE_DISCOVERY_SEEN_KEY) === "true";
+
+    if (!hasSeenOnboarding) {
+      setOnboardingOpen(true);
+      return;
+    }
+
+    if (!hasSeenFeatureDiscovery) {
+      setActiveView("budget");
+      setFeatureDiscoveryOpen(true);
+    }
+  }, [isReady]);
 
   useEffect(() => {
     requestAnimationFrame(scrollToTop);
@@ -786,13 +859,45 @@ function App() {
     }
   }
 
+  function startOnboarding() {
+    setActiveView("budget");
+    setDrawerOpen(false);
+    setOnboardingOpen(true);
+  }
+
+  function closeOnboarding({ startDiscovery = false, skipDiscovery = false } = {}) {
+    localStorage.setItem(ONBOARDING_SEEN_KEY, "true");
+    setOnboardingOpen(false);
+
+    if (skipDiscovery) {
+      localStorage.setItem(FEATURE_DISCOVERY_SEEN_KEY, "true");
+      return;
+    }
+
+    if (startDiscovery) {
+      setActiveView("budget");
+      setDrawerOpen(false);
+      requestAnimationFrame(() => setFeatureDiscoveryOpen(true));
+    }
+  }
+
+  function closeFeatureDiscovery() {
+    localStorage.setItem(FEATURE_DISCOVERY_SEEN_KEY, "true");
+    setFeatureDiscoveryOpen(false);
+  }
+
   return (
     <>
-      <header className="app-bar">
-        <button className="icon-button desktop-only" onClick={() => setDrawerOpen(true)} aria-label="Apri menu">
+      <header className="app-bar" data-discovery="app-bar">
+        <button
+          className="icon-button desktop-only"
+          onClick={() => setDrawerOpen(true)}
+          aria-label="Apri menu"
+          data-discovery="desktop-menu"
+        >
           <Menu size={20} />
         </button>
-        <div className="brand">
+        <div className="brand" data-discovery="brand">
           <img src="/logo.png" alt="" />
           <div>
             <strong>Budgeter</strong>
@@ -801,7 +906,10 @@ function App() {
         </div>
         <div className="app-bar-spacer" />
         {showPeriodControls && (
-          <div className={`period-picker appbar-period desktop-period-picker ${!isCurrentPeriod ? "away" : ""}`}>
+          <div
+            className={`period-picker appbar-period desktop-period-picker ${!isCurrentPeriod ? "away" : ""}`}
+            data-discovery="period"
+          >
             <div className={`desktop-current-period-slot ${!isCurrentPeriod ? "visible" : ""}`}>
               {!isCurrentPeriod && (
                 <button className="ghost-button current-period-button" onClick={goToCurrentPeriod}>
@@ -865,7 +973,7 @@ function App() {
 
       <main className="app-shell">
         {showPeriodControls && (
-          <section className="mobile-period surface">
+          <section className="mobile-period surface" data-discovery="period">
             <button className="icon-button" onClick={() => shiftMonth(-1)} aria-label="Mese precedente">
               <ChevronLeft size={18} />
             </button>
@@ -931,14 +1039,245 @@ function App() {
             importData={importData}
             clearData={clearData}
             fileInputRef={fileInputRef}
+            startOnboarding={startOnboarding}
           />
         )}
       </main>
 
-      <nav className="bottom-nav">
+      <nav className="bottom-nav" data-discovery="bottom-nav">
         <NavItems activeView={activeView} setActiveView={setActiveView} compact />
       </nav>
+
+      <OnboardingModal
+        open={onboardingOpen}
+        onFinish={() => closeOnboarding({ startDiscovery: true })}
+        onSkip={() => closeOnboarding({ skipDiscovery: true })}
+      />
+      <FeatureDiscovery open={featureDiscoveryOpen} onClose={closeFeatureDiscovery} />
     </>
+  );
+}
+
+function OnboardingModal({ open, onFinish, onSkip }) {
+  const [step, setStep] = useState(0);
+  const current = ONBOARDING_SLIDES[step];
+  const Icon = current.icon;
+  const isLast = step === ONBOARDING_SLIDES.length - 1;
+
+  useEffect(() => {
+    if (open) setStep(0);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    function closeOnEscape(event) {
+      if (event.key === "Escape") onSkip();
+    }
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [open, onSkip]);
+
+  if (!open) return null;
+
+  return (
+    <div className="onboarding-layer" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+      <article className="onboarding-panel">
+        <button className="icon-button onboarding-close" onClick={onSkip} aria-label="Salta onboarding">
+          <X size={18} />
+        </button>
+
+        <div className="onboarding-visual" style={{ "--accent": current.accent }}>
+          <div className="onboarding-orbit">
+            <span />
+            <span />
+            <span />
+          </div>
+          <div className="onboarding-icon">
+            <Icon size={42} />
+          </div>
+          <div className="onboarding-bars" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </div>
+        </div>
+
+        <div className="onboarding-copy">
+          <span className="eyebrow">{current.eyebrow}</span>
+          <h2 id="onboarding-title">{current.title}</h2>
+          <p>{current.text}</p>
+        </div>
+
+        <div className="onboarding-progress" aria-label={`Onboarding ${step + 1} di ${ONBOARDING_SLIDES.length}`}>
+          {ONBOARDING_SLIDES.map((slide, index) => (
+            <button
+              key={slide.title}
+              className={index === step ? "active" : ""}
+              onClick={() => setStep(index)}
+              aria-label={`Vai allo step ${index + 1}`}
+            />
+          ))}
+        </div>
+
+        <div className="onboarding-actions">
+          <button className="ghost-button" onClick={onSkip}>
+            Salta tutto
+          </button>
+          <div>
+            {step > 0 && (
+              <button className="ghost-button" onClick={() => setStep((currentStep) => currentStep - 1)}>
+                <ChevronLeft size={18} />
+                Indietro
+              </button>
+            )}
+            <button
+              className="primary-button"
+              onClick={() => (isLast ? onFinish() : setStep((currentStep) => currentStep + 1))}
+            >
+              {isLast ? <Sparkles size={18} /> : <ChevronRight size={18} />}
+              {isLast ? "Scopri l'app" : "Avanti"}
+            </button>
+          </div>
+        </div>
+      </article>
+    </div>
+  );
+}
+
+function FeatureDiscovery({ open, onClose }) {
+  const [step, setStep] = useState(0);
+  const [position, setPosition] = useState(null);
+  const current = FEATURE_DISCOVERY_STEPS[step];
+  const isLast = step === FEATURE_DISCOVERY_STEPS.length - 1;
+
+  useEffect(() => {
+    if (open) setStep(0);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    function closeOnEscape(event) {
+      if (event.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [open, onClose]);
+
+  useEffect(() => {
+    if (!open || !current) return undefined;
+    let frame = 0;
+
+    function visibleElement(selector) {
+      return Array.from(document.querySelectorAll(selector)).find((element) => {
+        const rect = element.getBoundingClientRect();
+        const style = window.getComputedStyle(element);
+        return rect.width > 0 && rect.height > 0 && style.display !== "none" && style.visibility !== "hidden";
+      });
+    }
+
+    function updatePosition() {
+      const element = visibleElement(current.selector);
+      if (!element) {
+        setPosition(null);
+        return;
+      }
+
+      element.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const rect = element.getBoundingClientRect();
+        const cardWidth = Math.min(380, window.innerWidth - 24);
+        const cardHeight = Math.min(390, window.innerHeight - 24);
+        const left = Math.min(
+          Math.max(12, rect.left + rect.width / 2 - cardWidth / 2),
+          window.innerWidth - cardWidth - 12
+        );
+        const belowTop = rect.bottom + 14;
+        const aboveTop = rect.top - 238;
+        const rawTop = belowTop < window.innerHeight - cardHeight - 12 ? belowTop : Math.max(12, aboveTop);
+        const top = Math.min(rawTop, window.innerHeight - cardHeight - 12);
+
+        setPosition({
+          top: rect.top - 8,
+          left: rect.left - 8,
+          width: rect.width + 16,
+          height: rect.height + 16,
+          cardTop: top,
+          cardLeft: left,
+          cardWidth
+        });
+      });
+    }
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [current, open]);
+
+  if (!open || !current) return null;
+
+  return (
+    <div className="feature-discovery-layer" role="dialog" aria-modal="true" aria-labelledby="feature-discovery-title">
+      <button className="feature-discovery-scrim" onClick={onClose} aria-label="Chiudi feature discovery" />
+      {position && (
+        <div
+          className="feature-discovery-spotlight"
+          style={{
+            top: position.top,
+            left: position.left,
+            width: position.width,
+            height: position.height
+          }}
+        />
+      )}
+      <article
+        className="feature-discovery-card"
+        style={{
+          top: position?.cardTop ?? "50%",
+          left: position?.cardLeft ?? 12,
+          width: position?.cardWidth ?? "calc(100% - 24px)"
+        }}
+      >
+        <div className="feature-discovery-head">
+          <span className="status-pill">
+            {step + 1} di {FEATURE_DISCOVERY_STEPS.length}
+          </span>
+          <button className="icon-button" onClick={onClose} aria-label="Chiudi feature discovery">
+            <X size={18} />
+          </button>
+        </div>
+        <div>
+          <span className="eyebrow">Feature Discovery</span>
+          <h2 id="feature-discovery-title">{current.title}</h2>
+          <p>{current.text}</p>
+        </div>
+        <div className="feature-discovery-actions">
+          <button className="ghost-button" onClick={onClose}>
+            Salta
+          </button>
+          <div>
+            {step > 0 && (
+              <button className="ghost-button" onClick={() => setStep((currentStep) => currentStep - 1)}>
+                <ChevronLeft size={18} />
+                Indietro
+              </button>
+            )}
+            <button
+              className="primary-button"
+              onClick={() => (isLast ? onClose() : setStep((currentStep) => currentStep + 1))}
+            >
+              {isLast ? <CheckCircle2 size={18} /> : <ChevronRight size={18} />}
+              {isLast ? "Fine" : "Avanti"}
+            </button>
+          </div>
+        </div>
+      </article>
+    </div>
   );
 }
 
@@ -1062,7 +1401,7 @@ function BudgetView({
           )}
         </div>
 
-        <section className={`budget-prep ${guideOpen ? "open" : ""}`}>
+        <section className={`budget-prep ${guideOpen ? "open" : ""}`} data-discovery="budget-prep">
           {!guideOpen ? (
             <>
               <div className="budget-prep-copy">
@@ -1096,7 +1435,7 @@ function BudgetView({
           )}
         </section>
 
-        <div className="budget-accordion-list">
+        <div className="budget-accordion-list" data-discovery="budget-groups">
           {TYPES.map((type) => {
             const isOpen = !!openTypes[type];
             const typeTotals = totals[type];
@@ -1832,7 +2171,16 @@ function CategoriesView({
   );
 }
 
-function SettingsView({ database, theme, setTheme, exportData, importData, clearData, fileInputRef }) {
+function SettingsView({
+  database,
+  theme,
+  setTheme,
+  exportData,
+  importData,
+  clearData,
+  fileInputRef,
+  startOnboarding
+}) {
   const years = Object.keys(database).length;
   const months = Object.values(database).reduce((sum, year) => sum + Object.keys(year).length, 0);
   const rows = Object.values(database).reduce(
@@ -1895,6 +2243,17 @@ function SettingsView({ database, theme, setTheme, exportData, importData, clear
               <CheckCircle2 size={15} />
               Offline Ready
             </span>
+          }
+        />
+        <SettingsRow
+          icon={Sparkles}
+          title="Onboarding"
+          description="Rivedi la guida iniziale e il tour degli elementi principali."
+          action={
+            <button className="ghost-button" onClick={startOnboarding}>
+              <Sparkles size={18} />
+              Rivedi guida
+            </button>
           }
         />
         <SettingsRow
