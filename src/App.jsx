@@ -816,9 +816,31 @@ function App() {
   }
 
   function clearData() {
-    if (window.confirm("Vuoi cancellare definitivamente tutti i dati locali di Budgeter?")) {
-      setDatabase({});
+    if (!window.confirm("Vuoi cancellare definitivamente tutti i dati locali e riportare Budgeter al primo avvio?")) {
+      return;
     }
+
+    [
+      STORAGE_KEY,
+      THEME_KEY,
+      CATEGORY_STORAGE_KEY,
+      CATEGORY_DEFAULTS_STORAGE_KEY,
+      CATEGORIES_DEFAULTS_PRUNED_KEY,
+      ONBOARDING_SEEN_KEY,
+      FEATURE_DISCOVERY_SEEN_KEY
+    ].forEach((key) => localStorage.removeItem(key));
+
+    setDatabase({});
+    setCategoryOptions(normalizeCategoryOptions());
+    setCategoryDefaults({});
+    setLegacyCategoriesPruned(false);
+    setTheme("auto");
+    setSelectedYear(today.year);
+    setSelectedMonth(today.month);
+    setActiveView("budget");
+    setDrawerOpen(false);
+    setFeatureDiscoveryOpen(false);
+    setOnboardingOpen(true);
   }
 
   function addCategory(type, value) {
