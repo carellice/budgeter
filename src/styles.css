@@ -1771,6 +1771,17 @@ select option {
   background: color-mix(in srgb, var(--surface-higher) 70%, transparent);
 }
 
+.category-item .category-delete-button {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 48%, var(--line));
+  background: color-mix(in srgb, var(--danger) 10%, var(--surface-higher));
+}
+
+.category-item .category-delete-button:hover {
+  border-color: color-mix(in srgb, var(--danger) 68%, var(--line));
+  background: color-mix(in srgb, var(--danger) 16%, var(--surface-higher));
+}
+
 .category-item button:disabled {
   cursor: not-allowed;
   opacity: 0.42;
@@ -2156,7 +2167,6 @@ select option {
   .steps,
   .data-stats,
   .category-form,
-  .category-item,
   .expected-guide-groups,
   .expected-guide-body,
   .budget-category-values,
@@ -2180,6 +2190,46 @@ select option {
     grid-column: 1 / -1;
     grid-row: 2;
     justify-self: stretch;
+  }
+
+  .budget-accordion-trigger {
+    min-height: auto;
+    grid-template-columns: auto minmax(0, 1fr) 40px;
+    gap: 10px;
+    padding: 14px;
+  }
+
+  .budget-accordion-trigger > svg {
+    justify-self: center;
+  }
+
+  .budget-accordion-totals {
+    grid-column: 1 / -1;
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .budget-accordion-totals span {
+    min-width: 0;
+  }
+
+  .category-item {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .category-item strong {
+    align-self: center;
+  }
+
+  .category-item label {
+    grid-column: 1 / -1;
+  }
+
+  .category-item .category-delete-button {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
   }
 
   .row-actions {

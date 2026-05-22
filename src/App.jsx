@@ -832,6 +832,10 @@ function App() {
   }
 
   function removeCategory(type, category) {
+    if (!window.confirm(`Vuoi eliminare la categoria "${category}"? I movimenti gia registrati restano nei mesi esistenti.`)) {
+      return;
+    }
+
     const targetTypes = categoryTargetTypes(type);
 
     setCategoryOptions((current) => {
@@ -2140,11 +2144,12 @@ function CategoriesView({
                     />
                   </label>
                   <button
+                    className="category-delete-button"
                     type="button"
                     onClick={() => removeCategory(group.key, category)}
-                    aria-label={`Rimuovi ${category}`}
+                    aria-label={`Elimina categoria ${category}`}
                   >
-                    <X size={14} />
+                    <Trash2 size={15} />
                   </button>
                 </div>
               ))}
