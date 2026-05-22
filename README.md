@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://placeholder.example.com">Apri la PWA pubblicata</a>
+  <a href="https://dueffebudgeter.netlify.app">Apri la PWA pubblicata</a>
 </p>
 
 ## Panoramica
