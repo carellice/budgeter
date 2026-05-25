@@ -1,5 +1,5 @@
-const CACHE_NAME = "budgeter-v2";
-const APP_SHELL = ["/", "/index.html", "/manifest.webmanifest", "/logo.png"];
+const CACHE_NAME = "budgeter-v3";
+const APP_SHELL = ["/", "/index.html", "/manifest.webmanifest", "/logo.png", "/icon-192.png", "/icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
