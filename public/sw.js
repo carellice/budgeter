@@ -1,5 +1,15 @@
-const CACHE_NAME = "budgeter-v3";
-const APP_SHELL = ["/", "/index.html", "/manifest.webmanifest", "/logo.png", "/icon-192.png", "/icon-512.png"];
+const CACHE_NAME = "budgeter-v5";
+const APP_SHELL = [
+  "/",
+  "/index.html",
+  "/manifest.webmanifest",
+  "/logo.png",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/fonts/AutopromPro-BlackRoundedItalic.otf",
+  "/dueffe/logo%20dueffe%20light%20no%20sfondo.png",
+  "/dueffe/logo%20dueffe%20dark%20no%20sfondo.png"
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

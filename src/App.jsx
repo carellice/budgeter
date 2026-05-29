@@ -493,6 +493,7 @@ function App() {
   const [isReady, setIsReady] = useState(false);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const [featureDiscoveryOpen, setFeatureDiscoveryOpen] = useState(false);
+  const [brandCompact, setBrandCompact] = useState(false);
   const fileInputRef = useRef(null);
   const showPeriodControls = activeView === "budget";
   const isCurrentPeriod = selectedMonth === today.month && selectedYear === today.year;
@@ -568,6 +569,11 @@ function App() {
       setFeatureDiscoveryOpen(true);
     }
   }, [isReady]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setBrandCompact(true), 1800);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     requestAnimationFrame(scrollToTop);
@@ -945,19 +951,34 @@ function App() {
     <>
       <header className="app-bar" data-discovery="app-bar">
         <button
-          className="icon-button desktop-only"
+          className={`icon-button desktop-only desktop-menu-button ${drawerOpen ? "open" : ""}`}
           onClick={() => setDrawerOpen(true)}
           aria-label="Apri menu"
           data-discovery="desktop-menu"
         >
           <Menu size={20} />
         </button>
-        <div className="brand" data-discovery="brand">
-          <img src="/logo.png" alt="" />
-          <div>
-            <strong>Budgeter</strong>
-            <span>Dati solo locali</span>
-          </div>
+        <div
+          className={`header-brand ${brandCompact ? "is-compact" : ""}`}
+          role="img"
+          aria-label="Budgeter"
+          data-discovery="brand"
+        >
+          <span className="brand-text brand-text-left" aria-hidden="true">due</span>
+          <img
+            src="/dueffe/logo dueffe light no sfondo.png"
+            alt=""
+            className="brand-logo brand-logo-light"
+            aria-hidden="true"
+          />
+          <img
+            src="/dueffe/logo dueffe dark no sfondo.png"
+            alt=""
+            className="brand-logo brand-logo-dark"
+            aria-hidden="true"
+          />
+          <span className="brand-text brand-text-right" aria-hidden="true">e</span>
+          <span className="brand-text brand-text-app" aria-hidden="true">Budgeter</span>
         </div>
         <div className="app-bar-spacer" />
         {showPeriodControls && (
@@ -1011,12 +1032,20 @@ function App() {
 
       <aside className={`drawer ${drawerOpen ? "open" : ""}`}>
         <div className="drawer-head">
-          <div className="brand">
-            <img src="/logo.png" alt="" />
-            <div>
-              <strong>Budgeter</strong>
-              <span>Menu</span>
-            </div>
+          <div className="header-brand drawer-brand is-compact" role="img" aria-label="Budgeter">
+            <img
+              src="/dueffe/logo dueffe light no sfondo.png"
+              alt=""
+              className="brand-logo brand-logo-light"
+              aria-hidden="true"
+            />
+            <img
+              src="/dueffe/logo dueffe dark no sfondo.png"
+              alt=""
+              className="brand-logo brand-logo-dark"
+              aria-hidden="true"
+            />
+            <span className="brand-text brand-text-app" aria-hidden="true">Budgeter</span>
           </div>
           <button className="icon-button" onClick={() => setDrawerOpen(false)} aria-label="Chiudi menu">
             <X size={18} />
